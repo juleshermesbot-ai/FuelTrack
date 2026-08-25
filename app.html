@@ -107,7 +107,8 @@
     box-shadow:inset 0 1px 0 rgba(255,255,255,.16), 0 -20px 60px rgba(0,0,0,.6);
     transition:transform .34s cubic-bezier(.32,.72,.35,1);
   }
-  body.open .sheet,body.grensopen #grensSheet{transform:translate(-50%,0);}
+  body.open #tankSheet{transform:translate(-50%,0);}
+  body.grensopen #grensSheet{transform:translate(-50%,0);}
   body.open .backdrop,body.grensopen .backdrop{opacity:1;pointer-events:auto;}
   .grab{width:40px;height:5px;border-radius:99px;background:rgba(255,255,255,.22);margin:0 auto 16px;}
   .sheet h2{font-size:20px;font-weight:800;letter-spacing:-.4px;margin-bottom:14px;display:flex;align-items:center;gap:10px;}
@@ -181,9 +182,9 @@
   <script>document.getElementById('closeGrens').style.display='none';</script>
 
   <div class="backdrop" id="closeTank"></div>
-  <div class="sheet">
-    <div class="grab"></div>
-    <h2><img src="icons/fuel.png" style="width:32px;height:32px">Nieuwe tankbeurt</h2>
+  <div class="sheet" id="tankSheet">
+      <div class="grab"></div>
+      <h2><img src="icons/fuel.png" style="width:32px;height:32px">Nieuwe tankbeurt</h2>
     <div class="volrow" id="volRow">
       <div><div class="voltitle">Volle tank</div><div class="volsub">liters en bedrag later aanvullen</div></div>
       <button type="button" class="switch on" id="volSwitch" aria-label="Volle tank"><span></span></button>
@@ -440,6 +441,7 @@ document.addEventListener('click', e => {
     document.getElementById('gpBU').value = g.prijsBuitenland;
     document.getElementById('gafstand').value = Math.round(g.afstandHeenM/1000);
     document.getElementById('gliters').value = g.litersGetankt;
+    document.body.classList.remove('open');
     document.body.classList.add('grensopen');
   }
   if (e.target.id === 'grensOpslaan'){

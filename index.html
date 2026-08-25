@@ -175,11 +175,12 @@ function showResult(v){
       <div class="tankrow">
         <input type="number" inputmode="decimal" placeholder="50" id="tank">
       </div>
-      <button class="btnsave" onclick="saveCar()">Opslaan & verder →</button>
+      <button class="btnsave" id="savecar">Opslaan & verder →</button>
       <div class="savednote" id="savednote"></div>
     </div>`;
   $('result').style.display='block';
   r.dataset.vehicle = JSON.stringify(v);
+  $('savecar').addEventListener('click', saveCar);
 }
 
 function saveCar(){
@@ -192,9 +193,7 @@ function saveCar(){
     cilinderinhoud:v.cilinderinhoud, datum_eerste_toelating:v.datum_eerste_toelating,
     vervaldatum_apk:v.vervaldatum_apk, tank_liters:tank
   }));
-  const note = $('savednote');
-  note.style.display='block';
-  note.textContent='✓ Opgeslagen! Fase 2 (tankbeurten) komt hierna.';
+  location.href = 'app.html';
 }
 
 $('go').addEventListener('click', lookup);

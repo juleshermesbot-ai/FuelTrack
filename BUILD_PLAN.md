@@ -8,13 +8,13 @@
 
 Acceptatie: een bestaand kenteken toont echte RDW-gegevens; een ongeldig/onbekend kenteken geeft een duidelijke fout.
 
-## Fase 2 — Tankbeurten en verbruik
+## Fase 2 — Tankbeurten en verbruik (afgerond)
 - Eerst gedragstests voor L/100 km, bedragen en ongeldige invoer.
 - Volle tank registreren met datum, liters, totaalbedrag en km-stand/GPS-afstand.
 - Tankbeurten lokaal opslaan.
 - Verbruik per volle-tankinterval en maandtotaal tonen.
 
-## Fase 3 — GPS-ritten
+## Fase 3 — GPS-ritten (afgerond)
 - Eerst tests voor afstandsberekening, foutmarges en ritstatus.
 - Start/stop rit.
 - Geolocation-punten optellen en onrealistische GPS-sprongen negeren.

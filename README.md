@@ -10,8 +10,9 @@ Werkt op iPhone via Safari → "Zet op beginscherm".
 4. **Fase 4** — Grensvoordeel: berekenen of tanken in Duitsland/België loont
 
 ## Status
-- Fase 1: bezig
-- Ontwerp: `SchoolAgent/sketches/002-wallet-ios/index.html` (donker iOS Liquid Glass, 3D-emoji-iconen)
+- Fase 1: afgerond en lokaal geverifieerd
+- Fase 2: afgerond — tankbeurten, L/100 km en maandkosten
+- Ontwerp: donker iOS Liquid Glass met 3D-emoji-iconen
 
 ## Techniek
 - Gewone HTML/CSS/JS, geen frameworks

@@ -1,0 +1,374 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>FuelTrack</title>
+<style>
+  * { box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
+  :root {
+    --bg1:#05070c; --bg2:#0b1017; --card:rgba(255,255,255,.055); --line:rgba(255,255,255,.10);
+    --fg:#f4f6f9; --muted:rgba(245,246,250,.55); --blue:#3d9bff; --green:#30d158; --red:#ff453a;
+    --radius:22px;
+  }
+  body {
+    font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",Roboto,sans-serif;
+    background:
+      radial-gradient(120% 90% at 85% -10%, #12315e33 0%, transparent 60%),
+      radial-gradient(100% 80% at -10% 110%, #0f513233 0%, transparent 60%),
+      linear-gradient(180deg,var(--bg1),var(--bg2));
+    background-attachment:fixed;
+    color:var(--fg); max-width:430px;margin:0 auto;min-height:100vh;
+    padding:0 18px calc(120px + env(safe-area-inset-bottom));
+    -webkit-font-smoothing:antialiased;
+  }
+  .header{display:flex;align-items:center;justify-content:space-between;padding:26px 2px 16px;}
+  .header h1{font-size:30px;font-weight:800;letter-spacing:-.6px;}
+  .header .sub{font-size:12px;color:var(--muted);margin-top:3px;}
+
+  .hero{
+    border-radius:var(--radius);padding:20px;margin-bottom:14px;
+    background:linear-gradient(145deg,rgba(61,155,255,.16),rgba(122,92,255,.08) 55%,rgba(255,255,255,.04));
+    border:1px solid var(--line);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.14), 0 20px 44px rgba(0,0,0,.5);
+  }
+  .hero .label{font-size:11px;letter-spacing:1.6px;color:var(--muted);text-transform:uppercase;font-weight:700;}
+  .hero .big{font-size:46px;font-weight:800;letter-spacing:-1.5px;margin-top:6px;font-variant-numeric:tabular-nums;}
+  .hero .big small{font-size:17px;color:var(--muted);font-weight:600;}
+  .tiles{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;}
+  .tile{
+    border-radius:18px;padding:14px 15px;
+    background:var(--card);border:1px solid var(--line);backdrop-filter:blur(20px);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.08), 0 10px 26px rgba(0,0,0,.35);
+  }
+  .tile .t-label{font-size:11px;letter-spacing:1.1px;text-transform:uppercase;color:var(--muted);font-weight:700;margin-bottom:7px;display:flex;align-items:center;gap:7px;}
+  .tile img.tico{width:18px;height:18px;}
+  .tile .val{font-size:22px;font-weight:800;font-variant-numeric:tabular-nums;}
+  .tile .val small{font-size:13px;color:var(--muted);font-weight:600;}
+  .tile .foot{font-size:11.5px;color:var(--muted);margin-top:5px;}
+
+  .carcard{
+    display:flex;align-items:center;gap:13px;border-radius:var(--radius);padding:16px;margin-bottom:14px;
+    background:linear-gradient(140deg,rgba(255,255,255,.085),rgba(255,255,255,.035));
+    border:1px solid var(--line);backdrop-filter:blur(20px);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.12), 0 14px 32px rgba(0,0,0,.42);
+  }
+  .carcard img{width:40px;height:40px;filter:drop-shadow(0 4px 6px rgba(0,0,0,.5));}
+  .carcard h3{font-size:15.5px;font-weight:750;}
+  .carcard p{font-size:12px;color:var(--muted);margin-top:2px;}
+  .plate-mini{
+    margin-left:auto;background:linear-gradient(180deg,#ffe27a,#f0bf35);color:#151004;
+    font-family:"SF Mono",ui-monospace,monospace;font-weight:800;font-size:11px;letter-spacing:1.4px;
+    padding:5px 9px;border-radius:6px;border:1.5px solid #14110a;flex:none;
+    box-shadow:0 2px 0 rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.65);
+  }
+
+  .listcard{
+    border-radius:var(--radius);overflow:hidden;
+    background:var(--card);border:1px solid var(--line);backdrop-filter:blur(20px);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.08), 0 12px 28px rgba(0,0,0,.38);
+  }
+  .listcard h4{font-size:12px;text-transform:uppercase;letter-spacing:1.3px;color:var(--muted);padding:15px 18px 8px;font-weight:800;}
+  .empty{padding:8px 18px 18px;font-size:13.5px;color:var(--muted);}
+  .item{display:flex;align-items:center;gap:12px;padding:12px 16px;border-top:1px solid rgba(255,255,255,.06);}
+  .item img{width:26px;height:26px;filter:drop-shadow(0 3px 4px rgba(0,0,0,.4));flex:none;}
+  .item .title{font-size:14.5px;font-weight:650;}
+  .item .sub{font-size:11.5px;color:var(--muted);margin-top:2px;}
+  .right{margin-left:auto;text-align:right;flex:none;}
+  .right .v{font-size:14.5px;font-weight:750;font-variant-numeric:tabular-nums;}
+  .right .u{font-size:11.5px;color:var(--green);font-weight:700;margin-top:2px;}
+
+  .fabwrap{position:fixed;bottom:calc(24px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);z-index:5;width:100%;max-width:394px;display:flex;justify-content:center;padding:0 18px;}
+  .fab{
+    display:flex;align-items:center;gap:8px;border:none;cursor:pointer;font-family:inherit;
+    color:#fff;font-size:16px;font-weight:800;padding:16px 26px;border-radius:99px;
+    background:linear-gradient(160deg,rgba(120,180,255,.95),rgba(40,100,230,.95));
+    border:1px solid rgba(255,255,255,.28);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.45), 0 14px 34px rgba(40,110,240,.45);
+  }
+  .fab:active{transform:scale(.95);}
+
+  /* sheet */
+  .backdrop{position:fixed;inset:0;background:rgba(0,0,0,.55);opacity:0;pointer-events:none;transition:.25s;z-index:9;}
+  .sheet{
+    position:fixed;bottom:0;left:50%;transform:translate(-50%,112%);
+    width:100%;max-width:430px;z-index:10;
+    background:linear-gradient(165deg,rgba(38,44,58,.94),rgba(18,22,31,.96));
+    backdrop-filter:blur(34px);
+    border:1px solid rgba(255,255,255,.14);border-bottom:none;
+    border-radius:26px 26px 0 0;
+    padding:14px 20px calc(30px + env(safe-area-inset-bottom));
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.16), 0 -20px 60px rgba(0,0,0,.6);
+    transition:transform .34s cubic-bezier(.32,.72,.35,1);
+  }
+  body.open .sheet{transform:translate(-50%,0);}
+  body.open .backdrop{opacity:1;pointer-events:auto;}
+  .grab{width:40px;height:5px;border-radius:99px;background:rgba(255,255,255,.22);margin:0 auto 16px;}
+  .sheet h2{font-size:20px;font-weight:800;letter-spacing:-.4px;margin-bottom:14px;display:flex;align-items:center;gap:10px;}
+  .gpspill{
+    display:none;align-items:center;gap:8px;font-size:12.5px;font-weight:650;color:var(--green);
+    background:rgba(48,209,88,.12);border:1px solid rgba(48,209,88,.25);
+    padding:10px 13px;border-radius:12px;margin-bottom:14px;
+  }
+  .kmfield{display:block;}
+  .fbox{border-radius:16px;overflow:hidden;background:rgba(255,255,255,.05);border:1px solid var(--line);margin-bottom:14px;}
+  .frow{display:flex;align-items:center;gap:10px;padding:13px 15px;border-top:1px solid rgba(255,255,255,.06);}
+  .frow:first-child{border-top:none;}
+  .frow label{font-size:15px;font-weight:550;white-space:nowrap;}
+  .frow input{flex:1;margin-left:auto;text-align:right;font-size:17px;font-family:inherit;color:var(--fg);background:none;border:none;outline:none;font-variant-numeric:tabular-nums;min-width:0;}
+  .btnsave{
+    width:100%;border:none;border-radius:15px;padding:15px;font-family:inherit;cursor:pointer;
+    font-size:16px;font-weight:800;color:#fff;
+    background:linear-gradient(160deg,rgba(120,180,255,.95),rgba(40,100,230,.95));
+    border:1px solid rgba(255,255,255,.28);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.45), 0 12px 28px rgba(40,110,240,.4);
+  }
+  #formerr{color:var(--red);font-size:13px;text-align:center;margin-bottom:10px;display:none;}
+  a.link{color:var(--blue);text-decoration:none;font-size:13px;}
+</style>
+</head>
+<body>
+  <div class="header">
+    <div><h1>FuelTrack</h1><div class="sub" id="maandnaam">—</div></div>
+    <a class="link" href="index.html">Auto wijzigen</a>
+  </div>
+
+  <div id="app"></div>
+
+  <div class="fabwrap">
+    <button class="fab" id="openTank">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/></svg>
+      Getankt
+    </button>
+  </div>
+
+  <div class="backdrop" id="closeTank"></div>
+  <div class="sheet">
+    <div class="grab"></div>
+    <h2><img src="icons/fuel.png" style="width:32px;height:32px">Nieuwe tankbeurt</h2>
+    <div class="gpspill" id="gpspill"></div>
+    <div id="formerr"></div>
+    <div class="fbox">
+      <div class="frow kmfield"><label>Km-stand</label><input type="number" inputmode="numeric" placeholder="bijv. 87650" id="km"></div>
+      <div class="frow"><label>Liters</label><input type="number" inputmode="decimal" step="0.01" placeholder="42,5" id="liters"></div>
+      <div class="frow"><label>Totaalprijs €</label><input type="number" inputmode="decimal" step="0.01" placeholder="78,90" id="bedrag"></div>
+      <div class="frow"><label>Station</label><input type="text" placeholder="bijv. Shell Bavel" id="station"></div>
+    </div>
+    <button class="btnsave" id="saveTank">Opslaan</button>
+  </div>
+
+<script src="calc.js"></script>
+<script src="gps.js"></script>
+<script>
+const $ = id => document.getElementById(id);
+
+function getCar(){ try { return JSON.parse(localStorage.getItem('fueltrack_car')); } catch { return null; } }
+function getBeurten(){ try { return JSON.parse(localStorage.getItem('fueltrack_tankbeurten')) || []; } catch { return []; } }
+function setBeurten(b){ localStorage.setItem('fueltrack_tankbeurten', JSON.stringify(b)); }
+
+const MAANDEN = ['januari','februari','maart','april','mei','juni','juli','augustus','september','oktober','november','december'];
+const nu = new Date();
+const maandKey = nu.getFullYear() + '-' + String(nu.getMonth()+1).padStart(2,'0');
+
+// geen auto opgeslagen -> terug naar fase 1
+if (!getCar()) location.href = 'index.html';
+
+$('maandnaam').textContent = MAANDEN[nu.getMonth()] + ' ' + nu.getFullYear();
+
+function render(){
+  const car = getCar();
+  const beurten = getBeurten().slice().sort((a,b) => a.km - b.km);
+  let html = '';
+
+  // hero
+  const gem = gemiddeldVerbruik(beurten.map(b => ({liters:b.liters, km:b.km})));
+  html += `<div class="hero">
+    <div class="label">Gemiddeld verbruik</div>
+    <div class="big">${gem !== null ? String(gem).replace('.', ',') : '—'} <small>L/100km</small></div>
+  </div>`;
+
+  // tiles
+  const uitgaven = uitgavenDezeMaand(beurten, maandKey);
+  const litersDezeMaand = beurten.filter(b => (b.datum||'').startsWith(maandKey)).reduce((s,b)=>s+Number(b.liters), 0);
+  html += `<div class="tiles">
+    <div class="tile">
+      <div class="t-label"><img class="tico" src="icons/euro.png">Deze maand</div>
+      <div class="val">€${String(uitgaven.toFixed(2)).replace('.', ',')}</div>
+      <div class="foot">${beurten.filter(b => (b.datum||'').startsWith(maandKey)).length} tankbeurten · ${Math.round(litersDezeMaand)} L</div>
+    </div>
+    <div class="tile">
+      <div class="t-label"><img class="tico" src="icons/chart.png">Kilometerstand</div>
+      <div class="val">${beurten.length ? beurten[beurten.length-1].km.toLocaleString('nl-NL') : '—'} <small>km</small></div>
+      <div class="foot">${beurten.length >= 2 ? '+' + (beurten[beurten.length-1].km - beurten[0].km).toLocaleString('nl-NL') + ' km gereden' : 'nog geen ritten'}</div>
+    </div>
+  </div>`;
+
+  // auto
+  const merkNetjes = car.merk.charAt(0) + car.merk.slice(1).toLowerCase();
+  const model = (car.handelsbenaming||'').replace(new RegExp('^'+car.merk+'\\s*','i'),'');
+  html += `<div class="carcard">
+    <img src="icons/car.png" alt="">
+    <div><h3>${merkNetjes} ${model}</h3><p>Benzine · Tank ${car.tank_liters} L</p></div>
+    <div class="plate-mini">${car.kenteken}</div>
+  </div>`;
+
+  // lijst
+  // rit-status
+  const rit = getRit();
+  if (rit && rit.actief){
+    const live = formatKm(ritLengte(rit.punten));
+    html += `<div class="listcard" style="margin-bottom:14px"><h4>Rit bezig</h4>
+      <div class="item" style="border-top:none">
+        <img src="icons/pin.png">
+        <div><div class="title">GPS registreren…</div><div class="sub">sluit dit scherm niet tijdens het rijden</div></div>
+        <div class="right"><div class="v" style="color:var(--green)">${live}</div><div class="u" id="livestat">live</div></div>
+      </div>
+      <div class="item" style="border-top:1px solid rgba(255,255,255,.06)">
+        <button class="btnsave" id="stopRit" style="padding:12px;font-size:15px;background:linear-gradient(160deg,rgba(255,125,115,.9),rgba(224,58,47,.9));box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 10px 24px rgba(224,58,47,.35)">■ Rit beëindigen</button>
+      </div></div>`;
+  } else {
+    const ritten = getRitten();
+    const laatste = ritten[ritten.length-1];
+    html += `<div class="listcard" style="margin-bottom:14px"><h4>Ritten</h4>`;
+    if (!laatste){
+      html += `<div class="item" style="border-top:none">
+        <img src="icons/pin.png">
+        <div><div class="title">Nog geen ritten</div><div class="sub">start een rit vóór je gaat rijden</div></div>
+      </div>
+      <div class="item" style="border-top:1px solid rgba(255,255,255,.06)">
+        <button class="btnsave" id="startRit" style="padding:12px;font-size:15px">▶ Start rit (GPS)</button>
+      </div></div>`;
+    } else {
+      const datum = new Date(laatste.eind).toLocaleDateString('nl-NL');
+      html += `<div class="item" style="border-top:none">
+        <img src="icons/pin.png">
+        <div><div class="title">Laatste rit</div><div class="sub">${datum}</div></div>
+        <div class="right"><div class="v">${formatKm(laatste.meters)}</div></div>
+      </div>
+      <div class="item" style="border-top:1px solid rgba(255,255,255,.06)">
+        <button class="btnsave" id="startRit" style="padding:12px;font-size:15px">▶ Start rit (GPS)</button>
+      </div></div>`;
+    }
+  }
+
+  html += `<div class="listcard"><h4>Tankbeurten</h4>`;
+  if (!beurten.length){
+    html += `<div class="empty">Nog geen tankbeurten.<br>Tik onderaan op <strong>+ Getankt</strong> om te beginnen.</div>`;
+  } else {
+    for (let i = beurten.length-1; i >= 0; i--){
+      const b = beurten[i];
+      const v = i > 0 ? verbruik(b.liters, beurten[i-1].km, b.km) : null;
+      const datumTxt = b.datum ? b.datum.split('-').reverse().join('-') : '';
+      html += `<div class="item">
+        <img src="icons/fuel.png">
+        <div><div class="title">${b.station || 'Tankbeurt'}</div>
+        <div class="sub">${datumTxt} · ${b.km.toLocaleString('nl-NL')} km · ${String(Number(b.liters).toFixed(1)).replace('.',',')} L</div></div>
+        <div class="right"><div class="v">€ ${Number(b.bedrag).toFixed(2).replace('.',',')}</div>
+        ${v !== null ? `<div class="u">${String(v).replace('.',',')} L/km</div>` : ''}</div>
+      </div>`;
+    }
+  }
+  html += `</div>`;
+  $('app').innerHTML = html;
+}
+
+// GPS: probeer km-stand automatisch te schatten via laatste bekende stand + gereden afstand deze sessie.
+// Fase 3 maakt dit echt; voor nu vragen we de km-stand handmatig (betrouwbaarder).
+function openSheet(){
+  $('formerr').style.display='none';
+  const beurten = getBeurten();
+  if (beurten.length) $('km').placeholder = 'hoger dan ' + Math.max(...beurten.map(b => b.km)).toLocaleString('nl-NL');
+  document.body.classList.add('open');
+}
+function closeSheet(){ document.body.classList.remove('open'); }
+
+function slaOp(){
+  const err = $('formerr');
+  const beurten = getBeurten();
+  const liters = parseNumber($('liters').value);
+  const bedrag = parseNumber($('bedrag').value);
+  const km = parseInt($('km').value, 10);
+  if (!km || km < 1000){ err.style.display='block'; err.textContent='Vul een geldige kilometerstand in.'; return; }
+  const vorige = beurten.reduce((m,b)=>Math.max(m,b.km), 0);
+  if (beurten.length && km <= vorige){ err.style.display='block'; err.textContent='De kilometerstand moet hoger zijn dan '+vorige.toLocaleString('nl-NL')+'.'; return; }
+  if (liters === null){ err.style.display='block'; err.textContent='Vul het aantal liters in.'; return; }
+  if (bedrag === null){ err.style.display='block'; err.textContent='Vul het totaalbedrag in.'; return; }
+
+  beurten.push({
+    datum: nu.toISOString().slice(0,10),
+    km, liters, bedrag,
+    station: $('station').value.trim() || null
+  });
+  setBeurten(beurten);
+  closeSheet();
+  render();
+}
+
+function getRit(){ try { return JSON.parse(localStorage.getItem('fueltrack_rit')); } catch { return null; } }
+function setRit(r){ if (r===null) localStorage.removeItem('fueltrack_rit'); else localStorage.setItem('fueltrack_rit', JSON.stringify(r)); }
+
+// ---- GPS-ritten (fase 3) ----
+let gpsWatch = null;
+
+function startRit(){
+  if (!navigator.geolocation){ alert('Je telefoon ondersteunt geen GPS-tracking.'); return; }
+  const rit = { actief:true, start: Date.now(), punten: [] };
+  setRit(rit);
+  gpsWatch = navigator.geolocation.watchPosition(
+    pos => {
+      const r = getRit();
+      if (!r || !r.actief) return;
+      r.punten.push({ lat: pos.coords.latitude, lon: pos.coords.longitude, t: Date.now() });
+      // max ~4000 punten bewaren (~2 uur rijden)
+      if (r.punten.length > 4000) r.punten = r.punten.slice(-4000);
+      setRit(r);
+      render();
+    },
+    err => {
+      const el = document.getElementById('livestat');
+      if (el) el.textContent = err.code === 1 ? 'geen toestemming' : 'geen signaal';
+    },
+    { enableHighAccuracy:true, maximumAge:2000, timeout:15000 }
+  );
+  render();
+}
+
+function stopRit(){
+  if (gpsWatch !== null){ navigator.geolocation.clearWatch(gpsWatch); gpsWatch = null; }
+  const rit = getRit();
+  if (!rit) return;
+  const meters = ritLengte(rit.punten) || 0;
+  const ritten = getRitten();
+  ritten.push({ start: rit.start, eind: Date.now(), meters });
+  localStorage.setItem('fueltrack_ritten', JSON.stringify(ritten));
+  setRit(null);
+  render();
+}
+
+function getRitten(){ try { return JSON.parse(localStorage.getItem('fueltrack_ritten')) || []; } catch { return []; } }
+
+function hervatWatch(){
+  const rit = getRit();
+  if (rit && rit.actief && gpsWatch === null && navigator.geolocation){
+    gpsWatch = navigator.geolocation.watchPosition(pos => {
+      const r = getRit();
+      if (!r || !r.actief) return;
+      r.punten.push({ lat: pos.coords.latitude, lon: pos.coords.longitude, t: Date.now() });
+      setRit(r);
+      render();
+    }, ()=>{}, { enableHighAccuracy:true, maximumAge:2000, timeout:15000 });
+  }
+}
+
+render();
+hervatWatch();
+$('openTank').addEventListener('click', openSheet);
+$('closeTank').addEventListener('click', closeSheet);
+$('saveTank').addEventListener('click', slaOp);
+document.addEventListener('click', e => {
+  if (e.target.id === 'startRit') startRit();
+  if (e.target.id === 'stopRit') stopRit();
+});
+</script>
+</body>
+</html>

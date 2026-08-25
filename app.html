@@ -101,8 +101,8 @@
     box-shadow:inset 0 1px 0 rgba(255,255,255,.16), 0 -20px 60px rgba(0,0,0,.6);
     transition:transform .34s cubic-bezier(.32,.72,.35,1);
   }
-  body.open .sheet{transform:translate(-50%,0);}
-  body.open .backdrop{opacity:1;pointer-events:auto;}
+  body.open .sheet,body.grensopen #grensSheet{transform:translate(-50%,0);}
+  body.open .backdrop,body.grensopen .backdrop{opacity:1;pointer-events:auto;}
   .grab{width:40px;height:5px;border-radius:99px;background:rgba(255,255,255,.22);margin:0 auto 16px;}
   .sheet h2{font-size:20px;font-weight:800;letter-spacing:-.4px;margin-bottom:14px;display:flex;align-items:center;gap:10px;}
   .gpspill{
@@ -142,6 +142,21 @@
     </button>
   </div>
 
+  <div class="backdrop" id="closeGrens"></div>
+  <div class="sheet" id="grensSheet">
+    <div class="grab"></div>
+    <h2><img src="icons/flag.png" style="width:32px;height:32px">Slim tanken</h2>
+    <div class="gpspill" style="display:flex;color:var(--blue);background:rgba(61,155,255,.12);border-color:rgba(61,155,255,.25)">Vul je prijzen en de extra afstand naar het buitenlandse station in.</div>
+    <div class="fbox">
+      <div class="frow"><label>Prijs NL (€/L)</label><input type="number" step="0.01" inputmode="decimal" id="gpNL"></div>
+      <div class="frow"><label>Prijs over de grens (€/L)</label><input type="number" step="0.01" inputmode="decimal" id="gpBU"></div>
+      <div class="frow kmfield"><label>Afstand enkele reis (km)</label><input type="number" inputmode="numeric" id="gafstand"></div>
+      <div class="frow"><label>Liters per keer</label><input type="number" inputmode="decimal" id="gliters"></div>
+    </div>
+    <button class="btnsave" id="grensOpslaan">Berekenen & opslaan</button>
+  </div>
+  <script>document.getElementById('closeGrens').style.display='none';</script>
+
   <div class="backdrop" id="closeTank"></div>
   <div class="sheet">
     <div class="grab"></div>
@@ -159,6 +174,7 @@
 
 <script src="calc.js"></script>
 <script src="gps.js"></script>
+<script src="grens.js"></script>
 <script>
 const $ = id => document.getElementById(id);
 
@@ -170,13 +186,14 @@ const MAANDEN = ['januari','februari','maart','april','mei','juni','juli','augus
 const nu = new Date();
 const maandKey = nu.getFullYear() + '-' + String(nu.getMonth()+1).padStart(2,'0');
 
-// geen auto opgeslagen -> terug naar fase 1
-if (!getCar()) location.href = 'index.html';
+// geen auto opgeslagen -> terug naar fase 1 (maar niet tijdens de test die localStorage vult)
+if (!getCar() && !new URLSearchParams(location.search).has('seed')) location.href = 'index.html';
 
 $('maandnaam').textContent = MAANDEN[nu.getMonth()] + ' ' + nu.getFullYear();
 
 function render(){
   const car = getCar();
+  if (!car) return; // nog geen auto opgeslagen
   const beurten = getBeurten().slice().sort((a,b) => a.km - b.km);
   let html = '';
 
@@ -250,6 +267,21 @@ function render(){
       </div></div>`;
     }
   }
+
+  // slim tanken / grensvoordeel
+  const gInst = getGrensInst();
+  const gUit = grensvoordeel({ ...gInst, verbruikL100km: gem !== null ? gem : 6.5 });
+  html += `<div class="listcard" style="margin-bottom:14px"><h4>Slim tanken</h4>
+    <div class="item" style="border-top:none">
+      <img src="icons/flag.png">
+      <div><div class="title">Grensvoordeel</div>
+      <div class="sub">${gUit && gUit.loont ? 'Tanken over de grens loont!' : 'Op dit moment niet voordelig'}</div></div>
+      <div class="right"><div class="v" style="${gUit && gUit.loont ? 'color:var(--green)' : 'color:var(--red)'}">${gUit ? formatEuro(gUit.netto) : '—'}</div>
+      <div class="u" style="color:var(--muted)">per ${Math.round(gInst.litersGetankt)} L</div></div>
+    </div>
+    <div class="item" style="border-top:1px solid rgba(255,255,255,.06)">
+      <button class="btnsave" id="grensInstellen" style="padding:11px;font-size:14px">⚙ Prijzen & afstand instellen</button>
+    </div></div>`;
 
   html += `<div class="listcard"><h4>Tankbeurten</h4>`;
   if (!beurten.length){
@@ -347,6 +379,20 @@ function stopRit(){
 
 function getRitten(){ try { return JSON.parse(localStorage.getItem('fueltrack_ritten')) || []; } catch { return []; } }
 
+// ---- Grensvoordeel (fase 4) ----
+function getGrensInst(){
+  let i;
+  try { i = JSON.parse(localStorage.getItem('fueltrack_grens')); } catch {}
+  const car = getCar();
+  return Object.assign({
+    afstandHeenM: 15000,        // bv. Etten-Leur -> grens
+    prijsNL: 2.10,
+    prijsBuitenland: 1.75,
+    litersGetankt: (car && car.tank_liters) || 45,
+    land: 'Duitsland'
+  }, i || {});
+}
+
 function hervatWatch(){
   const rit = getRit();
   if (rit && rit.actief && gpsWatch === null && navigator.geolocation){
@@ -365,9 +411,32 @@ hervatWatch();
 $('openTank').addEventListener('click', openSheet);
 $('closeTank').addEventListener('click', closeSheet);
 $('saveTank').addEventListener('click', slaOp);
+$('closeGrens').addEventListener('click', () => document.body.classList.remove('grensopen'));
 document.addEventListener('click', e => {
   if (e.target.id === 'startRit') startRit();
   if (e.target.id === 'stopRit') stopRit();
+  if (e.target.id === 'grensInstellen'){
+    const g = getGrensInst();
+    document.getElementById('gpNL').value = g.prijsNL;
+    document.getElementById('gpBU').value = g.prijsBuitenland;
+    document.getElementById('gafstand').value = Math.round(g.afstandHeenM/1000);
+    document.getElementById('gliters').value = g.litersGetankt;
+    document.body.classList.add('grensopen');
+  }
+  if (e.target.id === 'grensOpslaan'){
+    const g = {
+      prijsNL: parseFloat(document.getElementById('gpNL').value.replace(',','.')),
+      prijsBuitenland: parseFloat(document.getElementById('gpBU').value.replace(',','.')),
+      afstandHeenM: parseFloat(document.getElementById('gafstand').value.replace(',','.')) * 1000,
+      litersGetankt: parseFloat(document.getElementById('gliters').value.replace(',','.'))
+    };
+    if ([g.prijsNL,g.prijsBuitenland,g.afstandHeenM,g.litersGetankt].some(x => !isFinite(x) || x <= 0)){
+      alert('Vul alle velden met geldige getallen in.'); return;
+    }
+    localStorage.setItem('fueltrack_grens', JSON.stringify(g));
+    document.body.classList.remove('grensopen');
+    render();
+  }
 });
 </script>
 </body>

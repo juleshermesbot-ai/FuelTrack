@@ -21,7 +21,7 @@ Acceptatie: een bestaand kenteken toont echte RDW-gegevens; een ongeldig/onbeken
 - Rit en kilometers lokaal bewaren.
 - iOS-beperkingen duidelijk tonen.
 
-## Fase 4 — Grensvoordeel
+## Fase 4 — Grensvoordeel (afgerond)
 - Kosten van heen/terugrit berekenen met werkelijk gemeten verbruik.
 - Besparing bij een prijsverschil per liter berekenen.
 - Eerst handmatige prijzen; live prijsbron alleen wanneer betrouwbaar en legaal beschikbaar.

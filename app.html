@@ -118,6 +118,23 @@
   }
   .kmfield{display:block;}
   .fbox{border-radius:16px;overflow:hidden;background:rgba(255,255,255,.05);border:1px solid var(--line);margin-bottom:14px;}
+  .volrow{
+    display:flex;align-items:center;justify-content:space-between;gap:12px;
+    background:rgba(48,209,88,.10);border:1px solid rgba(48,209,88,.25);
+    border-radius:14px;padding:12px 14px;margin-bottom:14px;
+  }
+  .voltitle{font-size:15px;font-weight:750;color:var(--green);}
+  .volsub{font-size:11.5px;color:var(--muted);margin-top:2px;}
+  .switch{
+    width:52px;height:30px;border-radius:99px;border:none;cursor:pointer;flex:none;
+    background:rgba(255,255,255,.15);position:relative;transition:background .2s;padding:0;
+  }
+  .switch span{
+    position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;
+    transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.4);
+  }
+  .switch.on{background:var(--green);}
+  .switch.on span{left:25px;}
   .frow{display:flex;align-items:center;gap:10px;padding:13px 15px;border-top:1px solid rgba(255,255,255,.06);}
   .frow:first-child{border-top:none;}
   .frow label{font-size:15px;font-weight:550;white-space:nowrap;}
@@ -167,6 +184,10 @@
   <div class="sheet">
     <div class="grab"></div>
     <h2><img src="icons/fuel.png" style="width:32px;height:32px">Nieuwe tankbeurt</h2>
+    <div class="volrow" id="volRow">
+      <div><div class="voltitle">Volle tank</div><div class="volsub">liters en bedrag later aanvullen</div></div>
+      <button type="button" class="switch on" id="volSwitch" aria-label="Volle tank"><span></span></button>
+    </div>
     <div class="gpspill" id="gpspill"></div>
     <div id="formerr"></div>
     <div class="fbox">
@@ -295,14 +316,17 @@ function render(){
   } else {
     for (let i = beurten.length-1; i >= 0; i--){
       const b = beurten[i];
-      const v = i > 0 ? verbruik(b.liters, beurten[i-1].km, b.km) : null;
+      const vol = b.vol || b.liters === null || b.bedrag === null;
+      const v = (!vol && i > 0 && beurten[i-1].liters !== null) ? verbruik(b.liters, beurten[i-1].km, b.km) : null;
       const datumTxt = b.datum ? b.datum.split('-').reverse().join('-') : '';
-      html += `<div class="item">
+      const litersTxt = b.liters !== null && b.liters !== undefined ? ' · ' + String(Number(b.liters).toFixed(1)).replace('.', ',') + ' L' : '';
+      html += `<div class="item" ${vol ? 'data-aanvullen="' + i + '"' : ''}>
         <img src="icons/fuel.png">
         <div><div class="title">${b.station || 'Tankbeurt'}</div>
-        <div class="sub">${datumTxt} · ${b.km.toLocaleString('nl-NL')} km · ${String(Number(b.liters).toFixed(1)).replace('.',',')} L</div></div>
-        <div class="right"><div class="v">€ ${Number(b.bedrag).toFixed(2).replace('.',',')}</div>
-        ${v !== null ? `<div class="u">${String(v).replace('.',',')} L/km</div>` : ''}</div>
+        <div class="sub">${datumTxt} · ${b.km.toLocaleString('nl-NL')} km${litersTxt}</div></div>
+        <div class="right">${vol
+          ? '<span style="color:var(--blue);font-size:13px;font-weight:750">⚡ Vol</span><br><span style="color:var(--muted);font-size:11px">tik om aan te vullen</span>'
+          : `<span class="v">€ ${Number(b.bedrag).toFixed(2).replace('.', ',')}</span>${v !== null ? '<br><span class="u">' + String(v).replace('.', ',') + ' L/km</span>' : ''}`}
       </div>`;
     }
   }
@@ -313,34 +337,21 @@ function render(){
 // GPS: probeer km-stand automatisch te schatten via laatste bekende stand + gereden afstand deze sessie.
 // Fase 3 maakt dit echt; voor nu vragen we de km-stand handmatig (betrouwbaarder).
 function openSheet(){
+  aanVullenIndex = null;
+  $('km').readOnly = false;
   $('formerr').style.display='none';
   const beurten = getBeurten();
   if (beurten.length) $('km').placeholder = 'hoger dan ' + Math.max(...beurten.map(b => b.km)).toLocaleString('nl-NL');
+  ['km','liters','bedrag'].forEach(id => $(id).value = '');
   document.body.classList.add('open');
 }
 function closeSheet(){ document.body.classList.remove('open'); }
 
-function slaOp(){
-  const err = $('formerr');
-  const beurten = getBeurten();
-  const liters = parseNumber($('liters').value);
-  const bedrag = parseNumber($('bedrag').value);
-  const km = parseInt($('km').value, 10);
-  if (!km || km < 1000){ err.style.display='block'; err.textContent='Vul een geldige kilometerstand in.'; return; }
-  const vorige = beurten.reduce((m,b)=>Math.max(m,b.km), 0);
-  if (beurten.length && km <= vorige){ err.style.display='block'; err.textContent='De kilometerstand moet hoger zijn dan '+vorige.toLocaleString('nl-NL')+'.'; return; }
-  if (liters === null){ err.style.display='block'; err.textContent='Vul het aantal liters in.'; return; }
-  if (bedrag === null){ err.style.display='block'; err.textContent='Vul het totaalbedrag in.'; return; }
-
-  beurten.push({
-    datum: nu.toISOString().slice(0,10),
-    km, liters, bedrag,
-    station: $('station').value.trim() || null
-  });
-  setBeurten(beurten);
-  closeSheet();
-  render();
-}
+let volGetankt = true;
+$('volSwitch').addEventListener('click', () => {
+  volGetankt = !volGetankt;
+  $('volSwitch').classList.toggle('on', volGetankt);
+});
 
 function getRit(){ try { return JSON.parse(localStorage.getItem('fueltrack_rit')); } catch { return null; } }
 function setRit(r){ if (r===null) localStorage.removeItem('fueltrack_rit'); else localStorage.setItem('fueltrack_rit', JSON.stringify(r)); }
@@ -418,10 +429,11 @@ $('openTank').addEventListener('click', openSheet);
 $('closeTank').addEventListener('click', closeSheet);
 $('saveTank').addEventListener('click', slaOp);
 $('closeGrens').addEventListener('click', () => document.body.classList.remove('grensopen'));
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
+
 document.addEventListener('click', e => {
   if (e.target.id === 'startRit') startRit();
   if (e.target.id === 'stopRit') stopRit();
+  if (e.target.closest && e.target.closest('[data-aanvullen]')) { openAanvullen(parseInt(e.target.closest('[data-aanvullen]').dataset.aanvullen, 10)); return; }
   if (e.target.id === 'grensInstellen'){
     const g = getGrensInst();
     document.getElementById('gpNL').value = g.prijsNL;
@@ -445,6 +457,68 @@ document.addEventListener('click', e => {
     render();
   }
 });
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
+let aanVullenIndex = null;
+
+function openAanvullen(i){
+  const b = getBeurten()[i];
+  if (!b) return;
+  aanVullenIndex = i;
+  $('km').value = b.km; $('km').readOnly = true;
+  $('liters').value = ''; $('bedrag').value = '';
+  $('station').value = b.station || '';
+  document.querySelector('.sheet h2').lastChild.textContent = 'Tankbeurt aanvullen';
+  volGetankt = false;
+  $('volSwitch').classList.remove('on');
+  $('formerr').style.display = 'none';
+  document.body.classList.add('open');
+}
+
+function slaOp(){
+  // aanvulmodus: bestaande beurt bijwerken
+  if (aanVullenIndex !== null){
+    const beurten = getBeurten();
+    const liters = parseNumber($('liters').value);
+    const bedrag = parseNumber($('bedrag').value);
+    if (liters === null || bedrag === null){
+      const err = $('formerr');
+      err.style.display='block'; err.textContent='Vul zowel de liters als het bedrag in om af te ronden.'; return;
+    }
+    beurten[aanVullenIndex].liters = liters;
+    beurten[aanVullenIndex].bedrag = bedrag;
+    beurten[aanVullenIndex].vol = false;
+    if ($('station').value.trim()) beurten[aanVullenIndex].station = $('station').value.trim();
+    setBeurten(beurten);
+    aanVullenIndex = null;
+    closeSheet(); render();
+    return;
+  }
+;  // normale nieuwe tankbeurt
+  const err = $('formerr');
+  const beurten = getBeurten();
+  const liters = parseNumber($('liters').value);
+  const bedrag = parseNumber($('bedrag').value);
+  const km = parseInt($('km').value, 10);
+  if (!km || km < 1000){ err.style.display='block'; err.textContent='Vul een geldige kilometerstand in.'; return; }
+  const vorige = beurten.reduce((m,b)=>Math.max(m,b.km), 0);
+  if (beurten.length && km <= vorige){ err.style.display='block'; err.textContent='De kilometerstand moet hoger zijn dan '+vorige.toLocaleString('nl-NL')+'.'; return; }
+  // liters/bedrag zijn optioneel (volle-tank-snelkeuze): mag je later aanvullen
+  if (!volGetankt && liters === null){ err.style.display='block'; err.textContent='Vul het aantal liters in, of zet "Volle tank" aan.'; return; }
+  if (!volGetankt && bedrag === null){ err.style.display='block'; err.textContent='Vul het totaalbedrag in, of zet "Volle tank" aan.'; return; }
+
+  beurten.push({
+    datum: nu.toISOString().slice(0,10),
+    km,
+    liters: liters || null,
+    bedrag: bedrag || null,
+    vol: volGetankt && (liters === null || bedrag === null),
+    station: $('station').value.trim() || null
+  });
+  setBeurten(beurten);
+  closeSheet();
+  render();
+}
+
 </script>
 </body>
 </html>

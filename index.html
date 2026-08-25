@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>FuelTrack</title>
+<style>
+  * { box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
+  :root {
+    --bg1:#05070c; --bg2:#0b1017; --card:rgba(255,255,255,.055); --line:rgba(255,255,255,.10);
+    --fg:#f4f6f9; --muted:rgba(245,246,250,.55); --blue:#3d9bff; --green:#30d158; --red:#ff453a;
+    --radius:22px;
+  }
+  body {
+    font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",Roboto,sans-serif;
+    background:
+      radial-gradient(120% 90% at 85% -10%, #12315e33 0%, transparent 60%),
+      radial-gradient(100% 80% at -10% 110%, #0f513233 0%, transparent 60%),
+      linear-gradient(180deg,var(--bg1),var(--bg2));
+    background-attachment:fixed;
+    color:var(--fg); max-width:430px;margin:0 auto;min-height:100vh;
+    padding:0 18px calc(40px + env(safe-area-inset-bottom));
+    -webkit-font-smoothing:antialiased;
+  }
+  .header{display:flex;align-items:center;justify-content:space-between;padding:26px 2px 16px;}
+  .header h1{font-size:30px;font-weight:800;letter-spacing:-.6px;}
+  .header .sub{font-size:12px;color:var(--muted);margin-top:3px;}
+
+  .card{
+    border-radius:var(--radius);padding:22px 20px;
+    background:linear-gradient(145deg,rgba(61,155,255,.14),rgba(122,92,255,.07) 55%,rgba(255,255,255,.04));
+    border:1px solid var(--line);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.14), 0 20px 44px rgba(0,0,0,.5);
+  }
+  .card h2{font-size:19px;font-weight:800;letter-spacing:-.3px;display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+  .card p{font-size:13.5px;color:var(--muted);line-height:1.5;margin-bottom:18px;}
+
+  .plate-input{display:flex;gap:10px;}
+  .platebox{
+    flex:1;background:#f5c518;color:#151004;border:none;border-radius:12px;
+    font-family:"SF Mono",ui-monospace,monospace;font-weight:800;font-size:24px;letter-spacing:5px;
+    text-align:center;text-transform:uppercase;padding:16px 10px;outline:none;
+    border:2px solid #14110a; box-shadow:0 3px 0 rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.65);
+  }
+  .platebox:focus{box-shadow:0 3px 0 rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.65), 0 0 0 3px rgba(61,155,255,.5);}
+  .gobtn{
+    width:58px;border:none;border-radius:14px;cursor:pointer;font-size:22px;font-weight:800;font-family:inherit;color:#fff;
+    background:linear-gradient(160deg,rgba(120,180,255,.95),rgba(40,100,230,.95));
+    border:1px solid rgba(255,255,255,.28);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.45), 0 12px 28px rgba(40,110,240,.4);
+  }
+  .hint{font-size:11.5px;color:var(--muted);margin-top:12px;text-align:center;}
+
+  #msg{margin-top:14px;font-size:13.5px;text-align:center;display:none;padding:10px;border-radius:12px;}
+  #msg.err{display:block;background:rgba(255,69,58,.12);color:var(--red);}
+  #msg.load{display:block;background:rgba(61,155,255,.12);color:var(--blue);}
+
+  /* resultaat */
+  #result{display:none;margin-top:16px;}
+  .carhero{
+    display:flex;align-items:center;gap:14px;border-radius:var(--radius);padding:18px;margin-bottom:12px;
+    background:linear-gradient(140deg,rgba(255,255,255,.085),rgba(255,255,255,.035));
+    border:1px solid var(--line);backdrop-filter:blur(20px);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.12), 0 14px 32px rgba(0,0,0,.42);
+  }
+  .carhero img{width:52px;height:52px;filter:drop-shadow(0 5px 8px rgba(0,0,0,.5));}
+  .carhero h3{font-size:17px;font-weight:750;}
+  .carhero p{font-size:12.5px;color:var(--muted);margin-top:3px;line-height:1.45;}
+  .plate-mini{
+    margin-left:auto;background:linear-gradient(180deg,#ffe27a,#f0bf35);color:#151004;
+    font-family:"SF Mono",ui-monospace,monospace;font-weight:800;font-size:12px;letter-spacing:1.6px;
+    padding:6px 10px;border-radius:7px;border:1.5px solid #14110a;flex:none;
+    box-shadow:0 2px 0 rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.65);
+  }
+  .specgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .tile{
+    border-radius:18px;padding:14px 15px;
+    background:var(--card);border:1px solid var(--line);backdrop-filter:blur(20px);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.08), 0 10px 26px rgba(0,0,0,.35);
+  }
+  .tile .t-label{font-size:11px;letter-spacing:1.1px;text-transform:uppercase;color:var(--muted);font-weight:700;margin-bottom:7px;}
+  .tile .val{font-size:19px;font-weight:750;font-variant-numeric:tabular-nums;}
+  .tile .val small{font-size:12.5px;color:var(--muted);font-weight:600;}
+
+  /* tankinhoud vraag */
+  .tankq{margin-top:14px;}
+  .tankq label{font-size:13px;color:var(--muted);display:block;margin-bottom:8px;}
+  .tankrow{display:flex;gap:10px;}
+  .tankrow input{
+    flex:1;background:rgba(255,255,255,.06);border:1px solid var(--line);border-radius:13px;
+    padding:14px;font-size:17px;color:var(--fg);outline:none;font-variant-numeric:tabular-nums;
+  }
+  .tankrow input:focus{border-color:var(--blue);}
+  .btnsave{
+    width:100%;border:none;border-radius:15px;padding:15px;font-family:inherit;cursor:pointer;margin-top:12px;
+    font-size:16px;font-weight:800;color:#fff;
+    background:linear-gradient(160deg,rgba(120,180,255,.95),rgba(40,100,230,.95));
+    border:1px solid rgba(255,255,255,.28);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.45), 0 12px 28px rgba(40,110,240,.4);
+  }
+  .savednote{margin-top:12px;font-size:13.5px;color:var(--green);text-align:center;display:none;}
+</style>
+</head>
+<body>
+  <div class="header"><div><h1>FuelTrack</h1><div class="sub">Stap 1 — jouw auto</div></div></div>
+
+  <div class="card">
+    <h2><img src="icons/car.png" style="width:34px;height:34px">Voer je kenteken in</h2>
+    <p>We halen je autogegevens automatisch op bij de RDW.</p>
+    <div class="plate-input">
+      <input id="plate" class="platebox" maxlength="8" placeholder="X-123-AB" autocomplete="off" autocapitalize="characters">
+      <button id="go" class="gobtn">→</button>
+    </div>
+    <div class="hint">Bijv. X-123-AB of x123ab</div>
+    <div id="msg"></div>
+  </div>
+
+  <div id="result"></div>
+
+<script>
+const $ = id => document.getElementById(id);
+
+function normalizePlate(raw){
+  const s = raw.toUpperCase().replace(/[^A-Z0-9]/g,'');
+  return /^[A-Z0-9]{6}$/.test(s) ? s : null;
+}
+
+async function lookup(){
+  const plate = normalizePlate($('plate').value);
+  const msg = $('msg');
+  if (!plate){ msg.className='err'; msg.textContent='Voer een geldig kenteken in (6 tekens).'; return; }
+  msg.className='load'; msg.textContent='Auto opzoeken bij RDW…';
+  $('result').style.display='none';
+  try {
+    const [vehicleRes, fuelRes] = await Promise.all([
+      fetch('https://opendata.rdw.nl/resource/m9d7-ebf2.json?kenteken='+plate),
+      fetch('https://opendata.rdw.nl/resource/8ys7-d773.json?kenteken='+plate)
+    ]);
+    const [vehicles, fuels] = await Promise.all([vehicleRes.json(), fuelRes.json()]);
+    if (!vehicles.length){ msg.className='err'; msg.textContent='Kenteken niet gevonden bij de RDW.'; return; }
+    const v = {...vehicles[0], brandstof_omschrijving: fuels[0]?.brandstof_omschrijving || 'Onbekend'};
+    msg.className=''; msg.style.display='none';
+    showResult(v);
+  } catch(e){
+    msg.className='err'; msg.textContent='Kon RDW niet bereiken. Check je internetverbinding.';
+  }
+}
+
+function fmtDatum(s){
+  if(!s || s.length!==8) return s||'—';
+  return s.slice(6,8)+'-'+s.slice(4,6)+'-'+s.slice(0,4);
+}
+
+function showResult(v){
+  const merk = v.merk||'', naam = v.handelsbenaming||'';
+  const brandstofMap = {B:'Benzine',D:'Diesel',E:'Elektrisch',G:'LPG',H:'Hybride',C:'CNG'};
+  const r = $('result');
+  r.innerHTML = `
+    <div class="carhero">
+      <img src="icons/car.png" alt="">
+      <div>
+        <h3>${merk.charAt(0)+merk.slice(1).toLowerCase()} ${naam.replace(new RegExp('^'+merk+'\\s*','i'),'')}</h3>
+        <p>${v.inrichting||''} · ${fmtDatum(v.datum_eerste_toelating)}</p>
+      </div>
+      <div class="plate-mini">${v.kenteken}</div>
+    </div>
+    <div class="specgrid">
+      <div class="tile"><div class="t-label">Brandstof</div><div class="val">${brandstofMap[(v.brandstof_omschrijving||'').trim()]||v.brandstof_omschrijving||'—'}</div></div>
+      <div class="tile"><div class="t-label">Motor</div><div class="val">${v.cilinderinhoud||'—'} <small>cc</small></div></div>
+      <div class="tile"><div class="t-label">Massa ledig</div><div class="val">${v.massa_ledig_voertuig||'—'} <small>kg</small></div></div>
+      <div class="tile"><div class="t-label">APK geldig tot</div><div class="val">${fmtDatum(v.vervaldatum_apk)}</div></div>
+    </div>
+    <div class="tankq card" style="margin-top:14px;padding:18px;">
+      <label>Hoeveel liter past er in je tank? (staat niet bij de RDW — kijk in je handleiding of zoek "<em>${merk} ${naam}</em> tankinhoud")</label>
+      <div class="tankrow">
+        <input type="number" inputmode="decimal" placeholder="50" id="tank">
+      </div>
+      <button class="btnsave" onclick="saveCar()">Opslaan & verder →</button>
+      <div class="savednote" id="savednote"></div>
+    </div>`;
+  $('result').style.display='block';
+  r.dataset.vehicle = JSON.stringify(v);
+}
+
+function saveCar(){
+  const v = JSON.parse($('result').dataset.vehicle);
+  const tank = parseFloat($('tank').value.replace(',','.'));
+  if (!tank || tank<=0 || tank>200){ alert('Vul een realistische tankinhoud in (liters).'); return; }
+  localStorage.setItem('fueltrack_car', JSON.stringify({
+    kenteken:v.kenteken, merk:v.merk, handelsbenaming:v.handelsbenaming,
+    inrichting:v.inrichting, brandstof:v.brandstof_omschrijving,
+    cilinderinhoud:v.cilinderinhoud, datum_eerste_toelating:v.datum_eerste_toelating,
+    vervaldatum_apk:v.vervaldatum_apk, tank_liters:tank
+  }));
+  const note = $('savednote');
+  note.style.display='block';
+  note.textContent='✓ Opgeslagen! Fase 2 (tankbeurten) komt hierna.';
+}
+
+$('go').addEventListener('click', lookup);
+$('plate').addEventListener('keydown', e => { if(e.key==='Enter') lookup(); });
+// eerder opgeslagen auto tonen
+if (localStorage.getItem('fueltrack_car')) $('plate').value = localStorage.getItem('fueltrack_car') ? JSON.parse(localStorage.getItem('fueltrack_car')).kenteken : '';
+</script>
+</body>
+</html>

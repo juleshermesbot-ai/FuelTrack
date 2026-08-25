@@ -26,7 +26,7 @@ Acceptatie: een bestaand kenteken toont echte RDW-gegevens; een ongeldig/onbeken
 - Besparing bij een prijsverschil per liter berekenen.
 - Eerst handmatige prijzen; live prijsbron alleen wanneer betrouwbaar en legaal beschikbaar.
 
-## Fase 5 — PWA-installatie
+## Fase 5 — PWA-installatie (afgerond)
 - Manifest, app-iconen en service worker.
 - Offline app-shell.
 - Echte installatieproef op iPhone via ‘Zet op beginscherm’.

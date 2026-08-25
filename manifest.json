@@ -1,0 +1,15 @@
+{
+  "name": "FuelTrack",
+  "short_name": "FuelTrack",
+  "description": "Benzineverbruik en kilometers bijhouden",
+  "start_url": "/app.html",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#05070c",
+  "theme_color": "#05070c",
+  "lang": "nl",
+  "icons": [
+    { "src": "icons/appicon-180.png", "sizes": "180x180", "type": "image/png" },
+    { "src": "icons/appicon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

@@ -4,6 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
 <title>FuelTrack</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/appicon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="FuelTrack">
+<meta name="theme-color" content="#05070c">
 <style>
   * { box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
   :root {
@@ -412,6 +418,7 @@ $('openTank').addEventListener('click', openSheet);
 $('closeTank').addEventListener('click', closeSheet);
 $('saveTank').addEventListener('click', slaOp);
 $('closeGrens').addEventListener('click', () => document.body.classList.remove('grensopen'));
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
 document.addEventListener('click', e => {
   if (e.target.id === 'startRit') startRit();
   if (e.target.id === 'stopRit') stopRit();

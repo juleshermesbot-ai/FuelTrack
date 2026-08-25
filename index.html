@@ -4,6 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
 <title>FuelTrack</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/appicon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="FuelTrack">
+<meta name="theme-color" content="#05070c">
 <style>
   * { box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
   :root {
@@ -198,6 +204,7 @@ function saveCar(){
 
 $('go').addEventListener('click', lookup);
 $('plate').addEventListener('keydown', e => { if(e.key==='Enter') lookup(); });
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
 // eerder opgeslagen auto tonen
 if (localStorage.getItem('fueltrack_car')) $('plate').value = localStorage.getItem('fueltrack_car') ? JSON.parse(localStorage.getItem('fueltrack_car')).kenteken : '';
 </script>

@@ -20,7 +20,7 @@ with sync_playwright() as p:
     res = page.request.get("http://localhost:8765/manifest.json")
     assert res.ok
     man = res.json()
-    assert man["start_url"] == "/app.html" and man["display"] == "standalone"
+    assert man["start_url"] == "./app.html" and man["display"] == "standalone"
 
     # service worker registreert zonder fouten
     page.wait_for_function("navigator.serviceWorker.ready.then(() => true)", timeout=15000)
